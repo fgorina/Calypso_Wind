@@ -12,6 +12,7 @@ extern "C"
   int oldState = -10;
 
   void sendMeta();
+  void sendSubscribe();
 
   void print_info()
   {
@@ -97,39 +98,57 @@ extern "C"
       Serial.println(message.data());
     }
 
-    if (socketState >= 0)
+    if (socketState == 0)
     {
-
       ledOn = 1000;
       ledOff = 0;
-      /*
-      if (DEBUG) { Serial.println("Sending login"); }
-      En principi això ja no es necessari
-      sendLogin();
-      */
 
       socketState = 2;
-
       if (DEBUG)
       {
-        Serial.println("Sending meta :");
-        Serial.println(metaUpdate);
+        Serial.println("Sending subscribe :");
+        Serial.println(subscribe);
       }
-      sendMeta();
+      sendSubscribe();
+      // sendMeta();
     }
     else if (socketState == 1)
     {
 
-      // Ideally check if "statusCode":200 is in message
+      ledOn = 1000;
+      ledOff = 0;
 
       socketState = 2;
-      setLed();
-      if (DEBUG)
-      {
-        Serial.println("Sending meta :");
-        Serial.println(metaUpdate);
+    }
+    else if (socketState == 2)
+    { // Process Message
+
+      JsonDocument doc;
+      deserializeJson(doc, message.c_str());
+      const char* p = doc["updates"][0]["values"][0]["path"];
+      String somePath = String(p);
+
+      if(somePath == "sensors.wind.speed"){
+          uint8_t v = doc["updates"][0]["values"][0]["value"];
+
+          if(DEBUG){
+            Serial.printf("Sensor speed %d\n", v);
+          }
+          if(pRemoteService != nullptr){
+            putUInt8(pRemoteService, DATA_RATE_CHARACTERISTIC, v);
+          }
+
+      }else if(somePath == "sensors.wind.sensors"){
+          uint8_t v = doc["updates"][0]["values"][0]["value"];
+
+          if(DEBUG){
+            Serial.printf("Sensor activation %d\n", v);
+          }
+          if(pRemoteService != nullptr){
+            putUInt8(pRemoteService, SENSORS_CHARACTERISTIC, v);
+          }
       }
-      sendMeta();
+
     }
   }
 
@@ -300,7 +319,7 @@ extern "C"
       }
       else // Not OK is what creates problems. Changed to return false so it retries
       {
-        //token[0] = 0;
+        // token[0] = 0;
         return false;
       }
     }
@@ -495,7 +514,9 @@ extern "C"
           Serial.println("Connected to server????");
           print_info();
           socketState = 0;
-        }else{
+        }
+        else
+        {
           vTaskDelay(500);
         }
         break;
@@ -514,6 +535,17 @@ extern "C"
 
     return;
     client.send(metaUpdate);
+  }
+
+  void sendSubscribe()
+  {
+
+    String s = update1 + me + subscribe;
+    client.send(s);
+    if (DEBUG)
+    {
+      Serial.println(s);
+    }
   }
 
 #ifdef __cplusplus

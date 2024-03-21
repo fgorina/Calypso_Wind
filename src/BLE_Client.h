@@ -75,7 +75,7 @@ BLERemoteCharacteristic* apparentWindDirectionCharacteristic;
 
 class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
     void onResult(BLEAdvertisedDevice advertisedDevice) {
-        if(advertisedDevice.getName() == "ULTRASONIC"){         
+        if(strcmp(advertisedDevice.getName().c_str(), windMeterName) == 0){         
           windMeter = new BLEAdvertisedDevice(advertisedDevice);
           windMeterFound = true;
           if(DEBUG_1){
@@ -344,14 +344,6 @@ bool connect_ble(){
 
     uint8_t  sensorValue = getUInt8(pRemoteService, SENSORS_CHARACTERISTIC);
     Serial.print("Sensors value: "); Serial.println(sensorValue);
-
-
-    if(sensorValue == 0 || true){
-      Serial.println("Activating sensors");
-      putUInt8(pRemoteService, SENSORS_CHARACTERISTIC, (uint8_t)1);
-      sensorValue = getUInt8(pRemoteService, SENSORS_CHARACTERISTIC);
-      Serial.print("Sensors value: "); Serial.println(sensorValue);
-    }
 
     uint8_t  statusValue = getUInt8(pRemoteService, STATUS_CHARACTERISTIC);
     Serial.print("Status value: "); Serial.println(statusValue);
