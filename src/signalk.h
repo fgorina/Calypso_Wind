@@ -64,7 +64,7 @@ extern "C"
       {
         Serial.println("Wss Connnection Closed");
       }
-      delay(1000);
+      vTaskDelay(1000);
     }
     else if (event == WebsocketsEvent::GotPing)
     {
@@ -164,7 +164,7 @@ extern "C"
         }
         return false;
       }
-      delay(200);
+      vTaskDelay(200);
     }
 
     if (DEBUG)
@@ -214,7 +214,7 @@ extern "C"
     Serial.print("Made POST with responseCode ");
     Serial.println(responseCode);
 
-    delay(500);
+    vTaskDelay(500);
     if (responseCode == -1)
     {
       return "";
@@ -298,9 +298,10 @@ extern "C"
         ledOff = 200;
         return true;
       }
-      else
+      else // Not OK is what creates problems. Changed to return false so it retries
       {
-        token[0] = 0;
+        //token[0] = 0;
+        return false;
       }
     }
     String href = requestAuth(skserver, skport, skpath);
@@ -313,7 +314,7 @@ extern "C"
     {
       ledOn = 100;
       ledOff = 400;
-      delay(5000);
+      vTaskDelay(5000);
     }
 
     if (strlen(token) > 0)
@@ -352,12 +353,13 @@ extern "C"
       for (int i = 0; i < n; ++i)
       {
         if (MDNS.hostname(i) == "signalk" || true)
-        { 
+        {
           sprintf(bigBuffer, "%d.%d.%d.%d", MDNS.IP(i)[0], MDNS.IP(i)[01], MDNS.IP(i)[02], MDNS.IP(i)[3]);
 
           if (strcmp(skserver, bigBuffer) != 0)
           {
-            Serial.print("Reconnecting to ");Serial.println(bigBuffer);
+            Serial.print("Reconnecting to ");
+            Serial.println(bigBuffer);
             // Reset the connection. Mujst get a new Token
 
             strcpy(skserver, bigBuffer);
@@ -385,19 +387,19 @@ extern "C"
   void startMdns()
   {
     Serial.println("Starting MDNS");
-    delay(10);
+    vTaskDelay(10);
     if (!MDNS.begin(device_name))
     { // Set the hostname to "esp32.local"
       Serial.println("Error setting up MDNS responder!");
       while (1)
       {
-        delay(1000);
+        vTaskDelay(1000);
       }
     }
     Serial.println("MDNS Started");
 
-    browseService("_http", "_tcp");
-    delay(10000);
+    browseService("signalk-ws", "tcp");
+    vTaskDelay(10000);
     mdnsDone = true;
   }
 
@@ -434,7 +436,7 @@ extern "C"
 
       case -5: // Network Disabled
 
-        delay(1000);
+        vTaskDelay(1000);
         break;
 
       case -4: // Check ssid
@@ -451,7 +453,7 @@ extern "C"
         }
         else
         {
-          delay(1000);
+          vTaskDelay(1000);
         }
         break;
 
@@ -460,7 +462,7 @@ extern "C"
         if (strlen(ssid) == 0)
         {
           socketState = -4;
-          delay(1000);
+          vTaskDelay(1000);
         }
         if (strlen(ssid) != 0)
         {
@@ -473,12 +475,12 @@ extern "C"
             else
             {
             }
-            delay(100); // Esperem a que canviin la ssid o el password
+            vTaskDelay(100); // Esperem a que canviin la ssid o el password
           }
         }
         else
         {
-          delay(1000);
+          vTaskDelay(1000);
         }
 
         break;
@@ -493,12 +495,15 @@ extern "C"
           Serial.println("Connected to server????");
           print_info();
           socketState = 0;
+        }else{
+          vTaskDelay(500);
         }
         break;
       }
-      if(bleClient == nullptr || !bleClient->isConnected()){
-    setup_ble();
-    }
+      if (bleClient == nullptr || !bleClient->isConnected())
+      {
+        setup_ble();
+      }
       client.poll();
       vTaskDelay(1);
     }
@@ -511,7 +516,6 @@ extern "C"
     client.send(metaUpdate);
   }
 
-  
 #ifdef __cplusplus
 } /*extern "C"*/
 #endif

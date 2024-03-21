@@ -6,17 +6,16 @@
 
 #include <ArduinoJson.h>
 
-#define DEBUG true
-#define DEBUG_1 true
+#define DEBUG false
+#define DEBUG_1 false
 
 #define ONBOARD_LED 2
 #define WIFI_LED 17
 #define BLE_LED 16
+#define FORCE_MDNS 26
+
 
 void sendData(uint8_t windSpeed, uint8_t windDirection);
-
-
-
 
 // Calypso BLE Definitions
 
@@ -31,7 +30,8 @@ uint8_t frequancy = 1; // 1, 4, 8 (Hz) Power consumption increased
 #define update1 "{ \"context\": \""
 #define update2 "\", \"updates\": [ {  \"source\": {\"label\": \"Calypso Wind\" }, \"values\": [ { \"path\": \"environment.wind.angleApparent\",\"value\":"
 #define update3 " },  { \"path\": \"environment.wind.speedApparent\",\"value\":"
-#define update4 " }]}]}"
+#define update4 " },  { \"path\": \"electrical.batteries.99.name\",\"value\": \"Ultrasonic\"}, { \"path\": \"electrical.batteries.99.location\",\"value\": \"Mast\"}, { \"path\": \"electrical.batteries.99.capacity.stateOfCharge\",\"value\": "
+#define update5 " }]}]}"
 
 char ssid[20] = "elrond";
 char password[20] = "ailataN1991";
@@ -70,6 +70,10 @@ void clearLed()
   ledState = 0;
   digitalWrite(ONBOARD_LED, ledState);
   digitalWrite(WIFI_LED, ledState);
+  if(!mdnsDone){
+    digitalWrite(BLE_LED, ledState);
+  }
+
 }
 
 void setLed()
@@ -78,20 +82,23 @@ void setLed()
 
   digitalWrite(ONBOARD_LED, ledState);
   digitalWrite(WIFI_LED, ledState);
+  if(!mdnsDone){
+    digitalWrite(BLE_LED, ledState);
+  }
 }
 
 void clearBLELed()
 {
   bleLedState = 0;
-  digitalWrite(BLE_LED, ledState);
+  digitalWrite(BLE_LED, bleLedState);
+  
 }
 
 void setBLELed()
 {
   bleLedState = 1;
+  digitalWrite(BLE_LED,bleLedState);
 
-
-  digitalWrite(BLE_LED, ledState);
 }
 
 void toggleLed()
@@ -109,7 +116,7 @@ void toggleLed()
   digitalWrite(WIFI_LED, ledState);
 }
 
-void sendData(uint8_t windSpeed, uint8_t windDirection)
+void sendData(uint8_t windSpeed, uint8_t windDirection, uint8_t battery)
 {
 
   if (client.available())
@@ -117,16 +124,19 @@ void sendData(uint8_t windSpeed, uint8_t windDirection)
 
     char buff[10];
     char buff1[10];
+    char buff2[10];
     double radians = double(windDirection) / 180.0 * PI;
     double speed = double(windSpeed) / 100.0;
+    double level = double(battery) / 100.0;
 
-    String s = update1 + me + update2 + dtostrf(radians, 6, 2, buff) + update3 +  dtostrf(speed, 6, 2, buff1) + update4;
+    String s = update1 + me + update2 + dtostrf(radians, 6, 2, buff) + update3 +  dtostrf(speed, 6, 2, buff1) + update4 + dtostrf(level, 6, 2, buff2) + update5;
     if(DEBUG){
       Serial.println(s);
     }
     clearBLELed();
-    digitalWrite(ONBOARD_LED, 0);
+    //digitalWrite(ONBOARD_LED, 0);
     client.send(s);
+    vTaskDelay(50);
     setBLELed();
   }
   else
@@ -146,6 +156,8 @@ void readPreferences();
 #include "BLE_Client.h"
 #include "signalk.h"
 
+
+// Modiofie preferences so SSID/PASSWD are hardwired. If not must see a way to set them
 void writePreferences()
 {
   preferences.begin("windmeter", false);
@@ -155,26 +167,28 @@ void writePreferences()
   preferences.remove("PPPORT");
   preferences.remove("TOKEN");
 
-  preferences.putString("SSID", ssid);
-  preferences.putString("PASSWD", password);
+  //preferences.putString("SSID", ssid);
+  //preferences.putString("PASSWD", password);
   preferences.putString("PPHOST", skserver);
   preferences.putInt("PPPORT", skport);
   preferences.putString("TOKEN", token);
   preferences.end();
 }
 
-void readPreferences()
+void readPreferences(bool reset)
 {
 
   preferences.begin("windmeter", true);
-  preferences.getString("SSID", ssid, 20);
-  preferences.getString("PASSWD", password, 20);
+  //preferences.getString("SSID", ssid, 20);
+  //preferences.getString("PASSWD", password, 20);
   preferences.getString("PPHOST", skserver, 20);
   skport = preferences.getInt("PPPORT", skport);
   preferences.getString("TOKEN", token, 200);
   preferences.end();
-  if (ssid == "192.168.1.23"){
-    ssid[0] = 0;
+  if (reset){
+    skserver[0] = 0;
+    skport= 0;
+    token[0] = 0;
   }
   print_info();
 }
@@ -205,11 +219,17 @@ void setup()
   pinMode(ONBOARD_LED, OUTPUT);
   pinMode(WIFI_LED, OUTPUT);
   pinMode(BLE_LED, OUTPUT);
+  pinMode(FORCE_MDNS, INPUT_PULLUP);
+
+  bool reset = digitalRead(FORCE_MDNS) == 0;
 
   clearBLELed();
   clearLed();
 
-  readPreferences();
+  readPreferences(reset);
+  if (strlen(skserver) != 0 && skport != 0){  // We already have the data, no need to do a mdns lookup
+    mdnsDone = true;
+  }
 
   xTaskCreatePinnedToCore(networkTask, "TaskNetwork", 4000, NULL, 1, &taskNetwork, 0);
   xTaskCreatePinnedToCore(ledTask, "TaskLed", 1000, NULL, 1, &taskLed, 0);

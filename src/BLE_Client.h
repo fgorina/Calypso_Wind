@@ -175,7 +175,7 @@ static void bleNotifyCallback(
 
 
     decodeWindData(pData, length);
-    sendData(windData.windSpeed, windData.windDirection);
+    sendData(windData.windSpeed, windData.windDirection, windData.batteryLevel);
     if (!windDataEqual(oldWindData, windData)){  
       if(DEBUG_1){
         printWindData();
