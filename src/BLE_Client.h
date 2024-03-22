@@ -19,8 +19,7 @@ extern "C" {
 #define WIND_SPEED_CHARACTERISTIC "2A39" //"00002A39-0000-1000-8000-00805F9B34FB"
 #define STATUS_CHARACTERISTIC "A001" // "0000A001-0000-1000-8000-00805F9B34FB"
 #define DATA_RATE_CHARACTERISTIC "A002" // "0000A002-0000-1000-8000-00805F9B34FB"
-#define SENSORS_CHARACTERISTIC "A003" // "0000A003-0000-1000-8000-00805F9B34FB"
-
+#define SENSORS_CHARACTERISTIC "A003" // "0000A003-0000-1000-8000-00805F9B34FB"8
 #define APPARENT_WIND_SPEED_CHARACTERISTIC "2A72"
 #define APPARENT_WIND_DIRECTION_CHARACTERISTIC "2A73"
 
@@ -53,6 +52,12 @@ typedef struct device_info_t {
   String hardwareRevision = "";
   String firmwareRevision = "";
   String softwareRevision = "";
+
+  uint8_t dataRate = 1;
+  uint8_t sensorValue = 0;
+  uint8_t status = 2;
+
+
 }  device_info_t;
 
 wind_data_t oldWindData;
@@ -298,7 +303,7 @@ bool connect_ble(){
     }
 
     loadDeviceData();
-    if(DEBUG_1){
+    if(DEBUG_1 || true){
       printDeviceData();
     }
 
@@ -339,14 +344,14 @@ bool connect_ble(){
     Serial.println(" - Found our service");
    
    
-    uint8_t  dataRate = getUInt8(pRemoteService, DATA_RATE_CHARACTERISTIC);
-    Serial.print("DataRate: "); Serial.println(dataRate);
+    deviceInfo.dataRate = getUInt8(pRemoteService, DATA_RATE_CHARACTERISTIC);
+    Serial.print("DataRate: "); Serial.println(deviceInfo.dataRate);
 
-    uint8_t  sensorValue = getUInt8(pRemoteService, SENSORS_CHARACTERISTIC);
-    Serial.print("Sensors value: "); Serial.println(sensorValue);
+    deviceInfo.sensorValue = getUInt8(pRemoteService, SENSORS_CHARACTERISTIC);
+    Serial.print("Sensors value: "); Serial.println(deviceInfo.sensorValue);
 
-    uint8_t  statusValue = getUInt8(pRemoteService, STATUS_CHARACTERISTIC);
-    Serial.print("Status value: "); Serial.println(statusValue);
+    deviceInfo.status = getUInt8(pRemoteService, STATUS_CHARACTERISTIC);
+    Serial.print("Status value: "); Serial.println(deviceInfo.status);
  
     windSpeedCharacteristic = pRemoteService->getCharacteristic(WIND_SPEED_CHARACTERISTIC);
     if (windSpeedCharacteristic == nullptr) {
@@ -355,6 +360,7 @@ bool connect_ble(){
       bleClient->disconnect();
       return false;
     }
+
     Serial.println(" - Found wind  characteristic");
     windSpeedCharacteristic->registerForNotify(bleNotifyCallback);
 

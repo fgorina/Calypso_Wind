@@ -9,6 +9,8 @@ extern "C"
   WiFiClient wifi_client;
   JsonDocument doc;
 
+  const char* subscribeMessage = "{ \"context\": \"%s\", \"subscribe\": [{\"path\": \"sensors.wind.speed\", \"policy\": \"instant\"},{\"path\": \"sensors.wind.sensors\", \"policy\": \"instant\"}]}";
+
   int oldState = -10;
 
   void sendMeta();
@@ -104,11 +106,7 @@ extern "C"
       ledOff = 0;
 
       socketState = 2;
-      if (DEBUG)
-      {
-        Serial.println("Sending subscribe :");
-        Serial.println(subscribe);
-      }
+      
       sendSubscribe();
       // sendMeta();
     }
@@ -125,30 +123,45 @@ extern "C"
 
       JsonDocument doc;
       deserializeJson(doc, message.c_str());
-      const char* p = doc["updates"][0]["values"][0]["path"];
+      const char *p = doc["updates"][0]["values"][0]["path"];
       String somePath = String(p);
 
-      if(somePath == "sensors.wind.speed"){
-          uint8_t v = doc["updates"][0]["values"][0]["value"];
+      if (somePath == "sensors.wind.speed")
+      {
+        uint8_t v = doc["updates"][0]["values"][0]["value"];
 
-          if(DEBUG){
-            Serial.printf("Sensor speed %d\n", v);
-          }
-          if(pRemoteService != nullptr){
+        if (deviceInfo.dataRate != v && (v == 1 || v == 4 || v == 8))
+        {
+          deviceInfo.dataRate = v;
+          if (pRemoteService != nullptr)
+          {
             putUInt8(pRemoteService, DATA_RATE_CHARACTERISTIC, v);
+            v = getUInt8(pRemoteService, DATA_RATE_CHARACTERISTIC);
+            if (DEBUG)
+            {
+              Serial.printf("Sensor speed %d\n", v);
+            }
           }
-
-      }else if(somePath == "sensors.wind.sensors"){
-          uint8_t v = doc["updates"][0]["values"][0]["value"];
-
-          if(DEBUG){
-            Serial.printf("Sensor activation %d\n", v);
-          }
-          if(pRemoteService != nullptr){
-            putUInt8(pRemoteService, SENSORS_CHARACTERISTIC, v);
-          }
+        }
       }
+      else if (somePath == "sensors.wind.sensors")
+      {
+        uint8_t v = doc["updates"][0]["values"][0]["value"];
 
+        if (deviceInfo.sensorValue != v)
+        {
+          deviceInfo.sensorValue = v;
+          if (pRemoteService != nullptr && (v == 0 || v == 1))
+          {
+            putUInt8(pRemoteService, SENSORS_CHARACTERISTIC, v);
+            v = getUInt8(pRemoteService, SENSORS_CHARACTERISTIC);
+            if (DEBUG)
+            {
+              Serial.printf("Sensor activation %d\n", v);
+            }
+          }
+        }
+      }
     }
   }
 
@@ -534,17 +547,19 @@ extern "C"
   { // Not needed, rudderAngle already defined in standard
 
     return;
-    client.send(metaUpdate);
+    //client.send(metaUpdate);
   }
 
   void sendSubscribe()
   {
-
-    String s = update1 + me + subscribe;
-    client.send(s);
+    char message[1024];
+    sprintf(message, subscribeMessage, me);
+    
+    client.send(message);
     if (DEBUG)
     {
-      Serial.println(s);
+      Serial.print("Sendt: ");
+      Serial.println(message);
     }
   }
 

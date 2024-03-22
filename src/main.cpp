@@ -25,15 +25,15 @@ uint8_t frequancy = 1; // 1, 4, 8 (Hz) Power consumption increased
 
 // SignalK Definitions
 
-#define metaUpdate ""
-
-const String subscribe = "\", \"subscribe\": [{\"path\": \"sensors.wind.speed\", \"policy\": \"instant\"},{\"path\": \"sensors.wind.sensors\", \"policy\": \"instant\"}]}";
-
-#define update1 "{ \"context\": \""
-#define update2 "\", \"updates\": [ {  \"source\": {\"label\": \"ULTRASONIC\" }, \"values\": [ { \"path\": \"environment.wind.angleApparent\",\"value\":"
-#define update3 " },  { \"path\": \"environment.wind.speedApparent\",\"value\":"
-#define update4 " },  { \"path\": \"electrical.batteries.99.name\",\"value\": \"Ultrasonic\"}, { \"path\": \"electrical.batteries.99.location\",\"value\": \"Mast\"}, { \"path\": \"electrical.batteries.99.capacity.stateOfCharge\",\"value\": "
-#define update5 " }]}]}"
+const char* updateMessage = 
+"{ \"context\": \"%s"
+  "\", \"updates\": [ {  \"source\": {\"label\": \"%s\" }, \"values\": [ "
+  "{ \"path\": \"environment.wind.angleApparent\",\"value\":%s },"
+  "{ \"path\": \"environment.wind.speedApparent\",\"value\":%s },"
+  "{ \"path\": \"electrical.batteries.99.name\",\"value\": \"%s\"}, "
+  "{ \"path\": \"electrical.batteries.99.location\",\"value\": \"Mast\"},"
+  "{ \"path\": \"electrical.batteries.99.capacity.stateOfCharge\",\"value\":%s "
+  " }]}]}";
 
 char ssid[20] = "Yamato";
 char password[20] = "ailataN1991";
@@ -41,6 +41,8 @@ char device_name[20] = "wind_meter";
 char skserver[20] = "";
 int skport = 0; // It is 4 bytes
 char skpath[100] = "/signalk/v1/stream?subscribe=none";
+
+
 
 using namespace websockets;
 
@@ -127,17 +129,20 @@ void sendData(uint8_t windSpeed, uint8_t windDirection, uint8_t battery)
     char buff[10];
     char buff1[10];
     char buff2[10];
+
+    char message[1024];
     double radians = double(windDirection) / 180.0 * PI;
     double speed = double(windSpeed) / 100.0;
     double level = double(battery) / 100.0;
 
-    String s = update1 + me + update2 + dtostrf(radians, 6, 2, buff) + update3 +  dtostrf(speed, 6, 2, buff1) + update4 + dtostrf(level, 6, 2, buff2) + update5;
-    if(DEBUG_1){
-      Serial.println(s);
+    sprintf(message, updateMessage, me, windMeterName,  dtostrf(radians, 6, 2, buff), dtostrf(speed, 6, 2, buff1), windMeterName, dtostrf(level, 6, 2, buff2));
+    //String s = update1 + me + update2 + dtostrf(radians, 6, 2, buff) + update3 +  dtostrf(speed, 6, 2, buff1) + update4 + dtostrf(level, 6, 2, buff2) + update5;
+    if(DEBUG){
+      Serial.print("Send: ");
+      Serial.println(message);
     }
     clearBLELed();
-    //digitalWrite(ONBOARD_LED, 0);
-    client.send(s);
+    client.send(message);
     vTaskDelay(5);
     setBLELed();
   }
