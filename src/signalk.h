@@ -7,6 +7,7 @@ extern "C"
 #endif
 
   WiFiClient wifi_client;
+  WiFiClient clientNemea;
   JsonDocument doc;
 
   const char* subscribeMessage = "{ \"context\": \"%s\", \"subscribe\": [{\"path\": \"sensors.wind.speed\", \"policy\": \"instant\"},{\"path\": \"sensors.wind.sensors\", \"policy\": \"instant\"}]}";
@@ -527,6 +528,15 @@ extern "C"
           Serial.println("Connected to server????");
           print_info();
           socketState = 0;
+          if(!clientNemea.connect(skserver, 10110)){// Change so it is connected when server detected 
+            Serial.println("No puc connetar-me al servidor NMea");
+            vTaskDelay(100);
+          } else{
+            Serial.println("Connectat al servior de NMEA");
+          }
+
+
+
         }
         else
         {
