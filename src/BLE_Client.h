@@ -130,6 +130,8 @@ static void decodeWindData(uint8_t *data, size_t length){
     if (windData.windDirection > 180){
         windData.windDirection = windData.windDirection - 360;
       }
+      Serial.print("Wind Direction ");
+      Serial.println(windData.windDirection);
   }
 
   if(length >= 5){

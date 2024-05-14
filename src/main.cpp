@@ -9,7 +9,7 @@
 
 #define DEBUG false
 #define DEBUG_1 false
-#define DEBUG_2 true
+#define DEBUG_2 false
 
 #define ONBOARD_LED 2
 #define WIFI_LED 2
@@ -21,7 +21,7 @@
 
 HardwareSerial GPSSerial(2);
 
-void sendData(uint8_t windSpeed, uint8_t windDirection);
+void sendData(uint8_t windSpeed, uint8_t windAngle, uint8_t battery);
 
 // Calypso BLE Definitions
 
@@ -127,7 +127,7 @@ void toggleLed()
   digitalWrite(WIFI_LED, ledState);
 }
 
-void sendData(uint8_t windSpeed, uint8_t windDirection, uint8_t battery)
+void sendData(int windSpeed, int windAngle, int battery)
 {
 
   if (client.available())
@@ -138,7 +138,7 @@ void sendData(uint8_t windSpeed, uint8_t windDirection, uint8_t battery)
     char buff2[10];
 
     char message[1024];
-    double radians = double(windDirection) / 180.0 * 3.151592;
+    double radians = double(windAngle) / 180.0 * PI;
     double speed = double(windSpeed) / 100.0;
     double level = double(battery) / 100.0;
 
@@ -146,7 +146,12 @@ void sendData(uint8_t windSpeed, uint8_t windDirection, uint8_t battery)
     // String s = update1 + me + update2 + dtostrf(radians, 6, 2, buff) + update3 +  dtostrf(speed, 6, 2, buff1) + update4 + dtostrf(level, 6, 2, buff2) + update5;
     if (DEBUG)
     {
-      Serial.print("Send: ");
+      Serial.print("Wind Direction ");
+      Serial.print(windAngle);
+      Serial.print("deg ");
+      Serial.print(radians);
+      Serial.println(" rad");
+      Serial.print("Sent: ");
       Serial.println(message);
     }
     clearBLELed();
