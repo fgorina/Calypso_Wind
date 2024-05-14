@@ -9,6 +9,7 @@
 
 #define DEBUG false
 #define DEBUG_1 false
+#define DEBUG_2 true
 
 #define ONBOARD_LED 2
 #define WIFI_LED 2
@@ -137,7 +138,7 @@ void sendData(uint8_t windSpeed, uint8_t windDirection, uint8_t battery)
     char buff2[10];
 
     char message[1024];
-    double radians = double(windDirection) / 180.0 * PI;
+    double radians = double(windDirection) / 180.0 * 3.151592;
     double speed = double(windSpeed) / 100.0;
     double level = double(battery) / 100.0;
 
@@ -234,8 +235,9 @@ void gpsTask(void *parameter)
     int n = GPSSerial.readBytesUntil(10, nmeaBuffer, 250);
     nmeaBuffer[n] = 10;
     nmeaBuffer[n + 1] = 0;
-    if (DEBUG)
+    if (DEBUG_2)
     {
+      Serial.print("< ");
       Serial.println(nmeaBuffer);
     }
 
@@ -264,8 +266,9 @@ void nmeaTask(void *parameter)
             nmeaBuffer1[n] = 10;
             nmeaBuffer1[n + 1] = 0;
             GPSSerial.write(nmeaBuffer1, n + 1);
-            if (DEBUG || true)
+            if (DEBUG_2)
             {
+              Serial.print("> ");
               Serial.println(nmeaBuffer1);
             }
           }

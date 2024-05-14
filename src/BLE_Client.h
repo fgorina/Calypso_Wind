@@ -127,6 +127,9 @@ static void decodeWindData(uint8_t *data, size_t length){
 
   if(length >= 4){
     windData.windDirection = data[3] * 256 + data[2];
+    if (windData.windDirection > 180){
+        windData.windDirection = windData.windDirection - 360;
+      }
   }
 
   if(length >= 5){
@@ -216,6 +219,9 @@ static void apparentWindDirectionCallback(
 
     if (length >= 2){
       windData.apparentWindDirection = pData[1] * 256 + pData[0];
+      if (windData.apparentWindDirection > 180){
+        windData.apparentWindDirection = windData.apparentWindDirection - 360.0;
+      }
     }
   
     if (!windDataEqual(oldWindData, windData)){
