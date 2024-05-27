@@ -66,6 +66,9 @@ wind_data_t windData;
 device_info_t deviceInfo;
 
 int scanTime = 5; //In seconds
+int maxBLEtries = 5;
+int bleTries = 0;
+
 BLEScan* pBLEScan;
 bool windMeterFound = false;
 bool windMeterConnected = false;
@@ -407,7 +410,12 @@ void setup_ble() {
     bleClient = BLEDevice::createClient();
 
     bool done = connect_ble();
+    if (done){
+      bleTries = 0;
+    }
 
+  }else{
+    bleTries += 1;
   }
 }
 

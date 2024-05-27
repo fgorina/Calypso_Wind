@@ -10,7 +10,7 @@ extern "C"
   WiFiClient clientNemea;
   JsonDocument doc;
 
-  const char* subscribeMessage = "{ \"context\": \"%s\", \"subscribe\": [{\"path\": \"sensors.wind.speed\", \"policy\": \"instant\"},{\"path\": \"sensors.wind.sensors\", \"policy\": \"instant\"}]}";
+  const char *subscribeMessage = "{ \"context\": \"%s\", \"subscribe\": [{\"path\": \"sensors.wind.speed\", \"policy\": \"instant\"},{\"path\": \"sensors.wind.sensors\", \"policy\": \"instant\"}]}";
 
   int oldState = -10;
 
@@ -107,7 +107,7 @@ extern "C"
       ledOff = 0;
 
       socketState = 2;
-      
+
       sendSubscribe();
       // sendMeta();
     }
@@ -528,15 +528,6 @@ extern "C"
           Serial.println("Connected to server????");
           print_info();
           socketState = 0;
-          if(!clientNemea.connect(skserver, 10110)){// Change so it is connected when server detected 
-            Serial.println("No puc connetar-me al servidor NMea");
-            vTaskDelay(100);
-          } else{
-            Serial.println("Connectat al servior de NMEA");
-          }
-
-
-
         }
         else
         {
@@ -546,7 +537,26 @@ extern "C"
       }
       if (bleClient == nullptr || !bleClient->isConnected())
       {
-        setup_ble();
+        if(bleTries < maxBLEtries){
+          setup_ble();
+        }
+      }
+
+      if (mdnsDone && (WiFi.status() == WL_CONNECTED))
+      {
+        if (!clientNemea.connected())
+        {
+          Serial.println("Starting NMEA connection");
+          if (!clientNemea.connect(skserver, 10110))
+          { // Change so it is connected when server detected
+            Serial.println("No puc connetar-me al servidor NMEA");
+            vTaskDelay(100);
+          }
+          else
+          {
+            Serial.println("Connectat al servidor de NMEA");
+          }
+        }
       }
       client.poll();
       vTaskDelay(1);
@@ -557,18 +567,18 @@ extern "C"
   { // Not needed, rudderAngle already defined in standard
 
     return;
-    //client.send(metaUpdate);
+    // client.send(metaUpdate);
   }
 
   void sendSubscribe()
   {
     char message[1024];
     sprintf(message, subscribeMessage, me);
-    
+
     client.send(message);
     if (DEBUG)
     {
-      Serial.print("Sendt: ");
+      Serial.print("Sent: ");
       Serial.println(message);
     }
   }
