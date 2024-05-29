@@ -560,6 +560,7 @@ extern "C"
       } else if (!bleClient->isConnected()){
         connect_ble();
       }
+      
       client.poll();
       if (bleClient != nullptr && bleClient->isConnected() && connectionActive && (millis() - lastReceived) > timeoutBle ){
         Serial.println("Disconnecting from BLE due to timeout");
