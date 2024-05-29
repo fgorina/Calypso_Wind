@@ -68,8 +68,8 @@ extern "C"
   unsigned long lastReceived = 0;
   unsigned long timeoutBle = 10000;
   int scanTime = 5; // In seconds
-int maxBLEtries = 5;
-int bleTries = 0;
+  int maxBLEtries = 5;
+  int bleTries = 0;
 
   BLEScan *pBLEScan;
   bool windMeterFound = false;
@@ -344,7 +344,8 @@ int bleTries = 0;
       Serial.println("Connected to device info service");
     }
 
-    if (!bleClient->isConnected()){
+    if (!bleClient->isConnected())
+    {
       connectionActive = false;
       return;
     }
@@ -428,8 +429,9 @@ int bleTries = 0;
     lastReceived = millis();
     connectionActive = true;
     loadDeviceData();
-    if (!bleClient->isConnected() || !connectionActive){
-      return(false);
+    if (!bleClient->isConnected() || !connectionActive)
+    {
+      return (false);
     }
     if (DEBUG_1 || true)
     {
@@ -536,11 +538,14 @@ int bleTries = 0;
       bleClient = BLEDevice::createClient();
 
       bool done = connect_ble();
-    if (done){
-      bleTries = 0;
+      if (done)
+      {
+        bleTries = 0;
+      }
     }
-  }else{
-    bleTries += 1;
+    else
+    {
+      bleTries += 1;
     }
   }
 

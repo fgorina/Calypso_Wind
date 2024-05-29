@@ -535,10 +535,16 @@ extern "C"
         }
         break;
       }
-      if ((bleClient == nullptr || !bleClient->isConnected()) && !windMeterFound)
+      if (bleTries < maxBLEtries)
       {
-        if(bleTries < maxBLEtries){
+        if ((bleClient == nullptr || !bleClient->isConnected()) && !windMeterFound)
+        {
+
           setup_ble();
+        }
+        else if (!bleClient->isConnected())
+        {
+          connect_ble();
         }
       }
 
@@ -548,7 +554,7 @@ extern "C"
         {
           Serial.println("Starting NMEA connection");
           if (!clientNemea.connect(skserver, 10110))
-          { // Change so it is connected when server detected
+          { 
             Serial.println("No puc connetar-me al servidor NMEA");
             vTaskDelay(100);
           }
@@ -557,29 +563,15 @@ extern "C"
             Serial.println("Connectat al servidor de NMEA");
           }
         }
-      } else if (!bleClient->isConnected()){
-        connect_ble();
-      }
-
-      if(mdnsDone && (WiFi.status() == WL_CONNECTED)){
-        if(!clientNemea.connected()){
-          Serial.println("Starting NMEA connection");
-          if(!clientNemea.connect(skserver, 10110)){
-            Serial.println("No puc conbectar-me al servidor NMEA");
-            vTaskDelay(100);
-          }else{
-            Serial.println("Connectat al servidor NMEA");
-          }
-        }
       }
 
       client.poll();
 
-      if (bleClient != nullptr && bleClient->isConnected() && connectionActive && (millis() - lastReceived) > timeoutBle ){
+      if (bleClient != nullptr && bleClient->isConnected() && connectionActive && (millis() - lastReceived) > timeoutBle)
+      {
         Serial.println("Disconnecting from BLE due to timeout");
         connectionActive = false;
         bleClient->disconnect();
-        
       }
       vTaskDelay(1);
     }
