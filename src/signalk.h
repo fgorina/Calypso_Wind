@@ -535,7 +535,7 @@ extern "C"
         }
         break;
       }
-      if (bleClient == nullptr || !bleClient->isConnected())
+      if ((bleClient == nullptr || !bleClient->isConnected()) && !windMeterFound)
       {
         if(bleTries < maxBLEtries){
           setup_ble();
@@ -557,8 +557,16 @@ extern "C"
             Serial.println("Connectat al servidor de NMEA");
           }
         }
+      } else if (!bleClient->isConnected()){
+        connect_ble();
       }
       client.poll();
+      if (bleClient != nullptr && bleClient->isConnected() && connectionActive && (millis() - lastReceived) > timeoutBle ){
+        Serial.println("Disconnecting from BLE due to timeout");
+        connectionActive = false;
+        bleClient->disconnect();
+        
+      }
       vTaskDelay(1);
     }
   }
