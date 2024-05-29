@@ -525,7 +525,7 @@ extern "C"
         }
         if (connectWs(skserver, skport, skpath))
         {
-          Serial.println("Connected to server????");
+          Serial.println("Connected to signalK server");
           print_info();
           socketState = 0;
         }
