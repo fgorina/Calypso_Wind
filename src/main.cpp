@@ -7,6 +7,7 @@
 
 #include <ArduinoJson.h>
 
+#define NMEA_BRIDGE false
 #define DEBUG false
 #define DEBUG_1 false
 #define DEBUG_2 false
@@ -292,7 +293,10 @@ void setup()
 {
   // put your setup code here, to run once:
   Serial.begin(115200);
-  GPSSerial.begin(38400, SERIAL_8N1, RX, TX);
+  if (NMEA_BRIDGE)
+  {
+    GPSSerial.begin(38400, SERIAL_8N1, RX, TX);
+  }
   pinMode(ONBOARD_LED, OUTPUT);
   pinMode(WIFI_LED, OUTPUT);
   pinMode(BLE_LED, OUTPUT);
@@ -311,8 +315,11 @@ void setup()
 
   xTaskCreatePinnedToCore(networkTask, "TaskNetwork", 4000, NULL, 1, &taskNetwork, 0);
   xTaskCreatePinnedToCore(ledTask, "TaskLed", 1000, NULL, 1, &taskLed, 0);
-  xTaskCreatePinnedToCore(gpsTask, "TaskGps", 2000, NULL, 0, &taskGPS, 0);
-  xTaskCreatePinnedToCore(nmeaTask, "TaskNemea", 2000, NULL, 0, &taskNemea, 0);
+  if (NMEA_BRIDGE)
+  {
+    xTaskCreatePinnedToCore(gpsTask, "TaskGps", 2000, NULL, 0, &taskGPS, 0);
+    xTaskCreatePinnedToCore(nmeaTask, "TaskNemea", 2000, NULL, 0, &taskNemea, 0);
+  }
 }
 
 void loop()
