@@ -7,7 +7,8 @@
 
 #include <ArduinoJson.h>
 
-#define NMEA_BRIDGE false
+#define NMEA_BRIDGE true
+#define CALYPSO_BRIDGE false
 #define DEBUG false
 #define DEBUG_1 false
 #define DEBUG_2 false
@@ -19,6 +20,10 @@
 
 #define RX 16
 #define TX 17
+
+#define nmeaWatchdogTimeout  5000
+
+unsigned long lastNmea = 0;
 
 HardwareSerial GPSSerial(2);
 
@@ -44,7 +49,7 @@ const char *updateMessage =
 
 char ssid[20] = "Yamato";
 char password[20] = "ailataN1991";
-char device_name[20] = "wind_meter";
+char device_name[20] = "nmea_bridge";
 char skserver[20] = "";
 int skport = 0; // It is 4 bytes
 char skpath[100] = "/signalk/v1/stream?subscribe=none";
@@ -259,7 +264,9 @@ void nmeaTask(void *parameter)
 {
   for (;;)
   {
-
+    if (lastNmea != 0 && (millis() - lastNmea) > nmeaWatchdogTimeout){
+      clientNemea.stop();
+    }
     if (clientNemea.connected())
     {
       if (clientNemea.available())
@@ -267,6 +274,7 @@ void nmeaTask(void *parameter)
         int n = clientNemea.readBytesUntil(10, nmeaBuffer1, 250);
         if (n > 0)
         {
+          lastNmea = millis();
           if (!((nmeaBuffer1[1] == 'G' && nmeaBuffer1[2] == 'P') || (nmeaBuffer1[1] == 'P' && nmeaBuffer1[2] == 'G')) || false)
           {
             nmeaBuffer1[n] = 10;

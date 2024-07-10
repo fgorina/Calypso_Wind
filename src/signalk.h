@@ -535,16 +535,19 @@ extern "C"
         }
         break;
       }
-      if (bleTries < maxBLEtries)
+      if (CALYPSO_BRIDGE)
       {
-        if ((bleClient == nullptr || !bleClient->isConnected()) && !windMeterFound)
+        if (bleTries < maxBLEtries)
         {
+          if ((bleClient == nullptr || !bleClient->isConnected()) && !windMeterFound)
+          {
 
-          setup_ble();
-        }
-        else if (!bleClient->isConnected())
-        {
-          connect_ble();
+            setup_ble();
+          }
+          else if (!bleClient->isConnected())
+          {
+            connect_ble();
+          }
         }
       }
 
@@ -554,7 +557,7 @@ extern "C"
         {
           Serial.println("Starting NMEA connection");
           if (!clientNemea.connect(skserver, 10110))
-          { 
+          {
             Serial.println("No puc connetar-me al servidor NMEA");
             vTaskDelay(100);
           }
@@ -566,12 +569,14 @@ extern "C"
       }
 
       client.poll();
-
-      if (bleClient != nullptr && bleClient->isConnected() && connectionActive && (millis() - lastReceived) > timeoutBle)
+      if (CALYPSO_BRIDGE)
       {
-        Serial.println("Disconnecting from BLE due to timeout");
-        connectionActive = false;
-        bleClient->disconnect();
+        if (bleClient != nullptr && bleClient->isConnected() && connectionActive && (millis() - lastReceived) > timeoutBle)
+        {
+          Serial.println("Disconnecting from BLE due to timeout");
+          connectionActive = false;
+          bleClient->disconnect();
+        }
       }
       vTaskDelay(1);
     }
