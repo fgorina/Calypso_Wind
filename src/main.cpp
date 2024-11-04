@@ -7,10 +7,10 @@
 
 #include <ArduinoJson.h>
 
-#define NMEA_BRIDGE true
-#define CALYPSO_BRIDGE false
+#define NMEA_BRIDGE false
+#define CALYPSO_BRIDGE true
 #define DEBUG false
-#define DEBUG_1 false
+#define DEBUG_1 true
 #define DEBUG_2 false
 
 #define ONBOARD_LED 2
@@ -49,7 +49,7 @@ const char *updateMessage =
 
 char ssid[20] = "Yamato";
 char password[20] = "ailataN1991";
-char device_name[20] = "nmea_bridge";
+char device_name[20] = "wind";
 char skserver[20] = "";
 int skport = 0; // It is 4 bytes
 char skpath[100] = "/signalk/v1/stream?subscribe=none";

@@ -553,6 +553,7 @@ extern "C"
 
       if (mdnsDone && (WiFi.status() == WL_CONNECTED))
       {
+        if (NMEA_BRIDGE){
         if (!clientNemea.connected())
         {
           Serial.println("Starting NMEA connection");
@@ -565,6 +566,7 @@ extern "C"
           {
             Serial.println("Connectat al servidor de NMEA");
           }
+        }
         }
       }
 

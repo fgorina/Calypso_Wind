@@ -135,6 +135,8 @@ extern "C"
     if (length >= 2)
     {
       windData.windSpeed = data[1] * 256 + data[0];
+       Serial.print("Wind Speed ");
+      Serial.println(windData.windSpeed);
     }
 
     if (length >= 4)
