@@ -164,7 +164,7 @@ void readPreferences();
 #include "signalk.h"
 
 
-// Modiofie preferences so SSID/PASSWD are hardwired. If not must see a way to set them
+// Modify preferences so SSID/PASSWD are hardwired. If not must see a way to set them
 void writePreferences()
 {
   preferences.begin("windmeter", false);
