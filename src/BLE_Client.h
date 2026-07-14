@@ -32,13 +32,13 @@ extern "C" {
 
 typedef struct wind_data_t {
 
-  int windSpeed = 0;
-  int windDirection = 0;
-  int batteryLevel = 0;
-  int temperature = 0;
-  int roll = 0;
-  int pitch = 0;
-  int compass = 0;
+  uint16_t windSpeed = 0;
+  uint16_t windDirection = 0;
+  uint16_t batteryLevel = 0;
+  uint16_t temperature = 0;
+  uint16_t roll = 0;
+  uint16_t pitch = 0;
+  uint16_t compass = 0;
 
   uint16_t apparentWindSpeed = 0;
   uint16_t apparentWindDirection = 0;

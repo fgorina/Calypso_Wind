@@ -6,7 +6,7 @@
 
 #include <ArduinoJson.h>
 
-#define DEBUG false
+#define DEBUG true
 #define DEBUG_1 false
 
 #define ONBOARD_LED 2
@@ -121,7 +121,7 @@ void toggleLed()
   digitalWrite(WIFI_LED, ledState);
 }
 
-void sendData(uint8_t windSpeed, uint8_t windDirection, uint8_t battery)
+void sendData(uint16_t windSpeed, uint16_t windDirection, uint16_t battery)
 {
 
   xSemaphoreTake(wsMutex, portMAX_DELAY);
@@ -135,12 +135,17 @@ void sendData(uint8_t windSpeed, uint8_t windDirection, uint8_t battery)
 
     char message[1024];
     double radians = double(windDirection) / 180.0 * PI;
+    if(radians > PI){
+      radians = radians - 2.0 * PI;
+    }
     double speed = double(windSpeed) / 100.0;
     double level = double(battery) / 100.0;
 
     sprintf(message, updateMessage, me, windMeterName,  dtostrf(radians, 6, 2, buff), dtostrf(speed, 6, 2, buff1), windMeterName, dtostrf(level, 6, 2, buff2));
     //String s = update1 + me + update2 + dtostrf(radians, 6, 2, buff) + update3 +  dtostrf(speed, 6, 2, buff1) + update4 + dtostrf(level, 6, 2, buff2) + update5;
     if(DEBUG){
+     Serial.print("Direction: ");Serial.print(windDirection); Serial.print(" Speed: "); Serial.print(windSpeed); Serial.print(" Battery: "); Serial.println(battery);
+      Serial.print("Radians: "); Serial.print(radians); Serial.print(" Speed: "); Serial.print(speed); Serial.print(" Battery: "); Serial.println(level);
       Serial.print("Send: ");
       Serial.println(message);
     }
