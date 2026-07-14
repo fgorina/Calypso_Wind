@@ -320,10 +320,12 @@ extern "C"
   {
     if (strlen(token) > 0)
     {
+      xSemaphoreTake(wsMutex, portMAX_DELAY);
       client.onMessage(onWsMessageCallback);
       client.onEvent(onWsEventsCallback);
       client.addHeader("Authorization", token);
       bool connected = client.connect(skserver, skport, skpath);
+      xSemaphoreGive(wsMutex);
       if (connected)
       {
         ledOn = 100;
@@ -351,10 +353,12 @@ extern "C"
 
     if (strlen(token) > 0)
     {
+      xSemaphoreTake(wsMutex, portMAX_DELAY);
       client.onMessage(onWsMessageCallback);
       client.onEvent(onWsEventsCallback);
       client.addHeader("Authorization", token);
       bool connected = client.connect(skserver, skport, skpath);
+      xSemaphoreGive(wsMutex);
       if (connected)
       {
         ledOn = 100;
@@ -538,7 +542,9 @@ extern "C"
       {
         setup_ble();
       }
+      xSemaphoreTake(wsMutex, portMAX_DELAY);
       client.poll();
+      xSemaphoreGive(wsMutex);
       vTaskDelay(1);
     }
   }

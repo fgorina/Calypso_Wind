@@ -237,10 +237,10 @@ void writeCommand(BLERemoteCharacteristic* characteristic,  uint8_t command){
     }
 }
 
-const char* getStringValue(BLERemoteService* service, const char* characteristic){
+String getStringValue(BLERemoteService* service, const char* characteristic){
   BLERemoteCharacteristic* someChar = service->getCharacteristic(characteristic);
   if(someChar != nullptr){
-    return someChar->readValue().c_str();
+    return String(someChar->readValue().c_str());
 
   }else{
     return "";

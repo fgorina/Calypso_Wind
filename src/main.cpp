@@ -38,8 +38,8 @@ const char* updateMessage =
 char ssid[20] = "Yamato";
 char password[20] = "ailataN1991";
 char device_name[20] = "wind_meter";
-char skserver[20] = "";
-int skport = 0; // It is 4 bytes
+char skserver[20] = "192.168.1.2";
+int skport = 3000; // It is 4 bytes
 char skpath[100] = "/signalk/v1/stream?subscribe=none";
 
 
@@ -51,6 +51,7 @@ bool mdnsDone = false; // Will be true when we have a server
 bool wifi_connect = false;
 int enabled = 0; // 0 Deshabilita les accions fins que s'ha rebut un command
 WebsocketsClient client;
+SemaphoreHandle_t wsMutex; // Guards `client`: accessed from networkTask and from the BLE notify callback (different task)
 int socketState = -4; // -5 does not use WiFi, -4 -> Before connecting to WiFi, -3, -2.Connectingau
 
 String me = "vessels.self";
@@ -123,6 +124,8 @@ void toggleLed()
 void sendData(uint8_t windSpeed, uint8_t windDirection, uint8_t battery)
 {
 
+  xSemaphoreTake(wsMutex, portMAX_DELAY);
+
   if (client.available())
   {
 
@@ -152,6 +155,8 @@ void sendData(uint8_t windSpeed, uint8_t windDirection, uint8_t battery)
       Serial.println("No connectat");
     }
   }
+
+  xSemaphoreGive(wsMutex);
 }
 
 // Preferences
@@ -232,6 +237,8 @@ void setup()
 
   clearBLELed();
   clearLed();
+
+  wsMutex = xSemaphoreCreateMutex();
 
   readPreferences(reset);
   if (strlen(skserver) != 0 && skport != 0){  // We already have the data, no need to do a mdns lookup
